@@ -1,0 +1,58 @@
+#.github/workflows/boj-auto-filler.yml
+name: Auto Create Issue & Link to Folder
+
+on:
+  push:
+    paths:
+      - '**/*.py'
+      - '**/*.java'
+      - '**/*.cpp'
+      - '**/*.c'
+      - '**/*.cc'
+      - '**/*.js'
+      - '**/*.ts'
+  workflow_dispatch:
+    inputs:
+      problem_id:
+        description: '강제로 이슈를 생성할 문제 번호'
+        required: false
+        type: string
+
+# 동시 실행 방지 (Race Condition 방지)
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  link-issue-to-folder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # git diff를 위해 전체 히스토리 가져오기
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Dependencies
+        run: pip install requests
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Run Issue Linker Script
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.ref_name }}
+          TARGET_ID: ${{ inputs.problem_id }}
+        run: python scripts/issue_linker.py
