@@ -171,12 +171,16 @@ def main():
     files = get_changed_files()
     processed_ids = set()
     changes_made = False
-
+    
+    # 1. 허용할 확장자 목록 정의
+    ALLOWED_EXTENSIONS = ('.py', '.java', '.cpp', '.c', '.cc', '.js', '.ts')
+    
     print(f"🔍 감지된 파일: {files}")
 
     for file_path in files:
         numbers = re.findall(r'(\d+)', file_path)
-        if not numbers: continue
+        if not file_path.endswith(ALLOWED_EXTENSIONS) or not numbers:
+            continue
         
         # 백준 문제 번호는 보통 1000번 이상임
         pid = 0
